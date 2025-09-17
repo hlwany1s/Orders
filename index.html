@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>حاسبة hlwany1s – واجهة الإدمن (مربوطة)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:'Segoe UI',system-ui,Tahoma,Arial;background:#00332d;color:#fff;margin:0;padding:0;text-align:center;animation:fadeIn 1.2s ease-in-out}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    header img{width:80px;margin-top:15px}
+    h1{font-size:26px;margin-bottom:10px;color:#19f6a7}
+    .container{background:#00463f;margin:20px auto;padding:20px;border-radius:10px;width:90%;max-width:720px;box-shadow:0 0 20px #012f2a}
+    input,select,textarea{width:90%;padding:10px;margin-top:10px;border:none;border-radius:7px;font-size:16px;background:#072f2a;color:#fff}
+    button{margin-top:15px;padding:10px 16px;background:#19f6a7;color:#00332d;font-weight:700;border:none;border-radius:8px;cursor:pointer;transition:.25s}
+    button:hover{background:#11c98a}
+    .btn-danger{background:#e74c3c;color:#fff}
+    .btn-danger:hover{background:#c0392b}
+    #result1,#result2{margin-top:12px;font-size:18px;color:#ffd700}
+    .muted{color:#d2e5df;font-size:13px;opacity:.95}
+    .row{display:grid;gap:10px;grid-template-columns:1fr 1fr;max-width:720px;margin:0 auto}
+    .row-3{grid-template-columns:1fr 1fr 1fr}
+    .pill{display:inline-block;border:1px solid #0b4f46;border-radius:999px;padding:6px 10px;background:#073d36;color:#aeead7;margin-bottom:6px}
+    .social{margin:20px auto 28px}
+    .icons{display:flex;justify-content:center;gap:15px;flex-wrap:wrap}
+    .icons a img{width:28px;height:28px;transition:.25s}
+    .icons a:hover img{transform:scale(1.2)}
+    footer img{width:100px;margin:24px auto 30px;opacity:.9}
+    .details{font-size:13px;color:#cfe7e2;margin-top:6px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border-bottom:1px solid #0b4f46;padding:8px;text-align:center}
+    th{color:#aeead7}
+    .summary{display:grid;grid-template-columns:1fr;gap:10px;max-width:720px;margin:0 auto}
+    .kpi{background:#073d36;border:1px solid #0b4f46;border-radius:10px;padding:10px}
+    .kpi .val{font-size:20px;color:#ffd700;margin-top:6px}
+    tr.deleted{opacity:.45;text-decoration:line-through;color:#999}
+    td.actions button{padding:6px 8px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="hlwany_logo_final.png" alt="Logo">
+    <h1>الحاسبة الخاصة بـ <strong>hlwany1s</strong></h1>
+    <div class="pill" id="now">--:--</div>
+  </header>
+
+  <div class="container">
+    <h3>💰 احسب عدد العملات من المبلغ</h3>
+    <p class="muted">اكتب المبلغ بالجنيه المصري</p>
+    <input id="money" type="number" inputmode="numeric" placeholder="أدخل المبلغ بالجنيه" />
+    <div class="row">
+      <button id="btnMoney">احسب عدد العملات 🧮</button>
+      <button id="btnClear1" type="button">مسح</button>
+    </div>
+    <div id="result1"></div>
+    <div id="details1" class="details"></div>
+  </div>
+
+  <div class="container">
+    <h3>🪙 احسب السعر من عدد العملات</h3>
+    <p class="muted">اكتب عدد عملات تيك توك</p>
+    <input id="coins" type="number" inputmode="numeric" placeholder="أدخل عدد العملات" />
+    <div class="row">
+      <button id="btnCoins">احسب السعر 💵</button>
+      <button id="btnClear2" type="button">مسح</button>
+    </div>
+    <div id="result2"></div>
+    <div id="details2" class="details"></div>
+  </div>
+
+  <!-- قسم إضافة العملية (واجهة مرتبطة بالـ Web App) -->
+  <div class="container">
+    <h3>➕ إضافة عملية (تم التنفيذ)</h3>
+    <p class="muted">اختر الإدمن، اكتب ملاحظة (اختياري)، واضغط إضافة. البيانات سترسل للشيت وعند فشل تُخزن وتُعاد المحاولة تلقائيًا.</p>
+
+    <div class="row">
+      <select id="adminSelect">
+        <option value="A">A</option>
+        <option value="T">T</option>
+        <option value="MS">MS</option>
+        <option value="MO">MO</option>
+        <option value="E">E</option>
+      </select>
+      <input id="note" type="text" placeholder="ملاحظة (اختياري)" />
+    </div>
+
+    <div class="row">
+      <button id="btnAdd">إضافة عملية (تم التنفيذ)</button>
+      <button id="btnClearAll" type="button">مسح كل الحقول</button>
+    </div>
+
+    <div id="sendStatus" class="muted" style="margin-top:8px"></div>
+
+    <!-- ملخص: نعرض فقط عدد العمليات كما طلبت -->
+    <div class="summary" style="margin-top:12px">
+      <div class="kpi"><div>عدد العمليات</div><div id="kpiOps" class="val">0</div></div>
+    </div>
+
+    <!-- جدول آخر 10 عمليات فقط -->
+    <table id="logTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الوقت</th>
+          <th>الأدمن</th>
+          <th>الفلوس (EGP)</th>
+          <th>العملات</th>
+          <th>الوضع</th>
+          <th>ملاحظة</th>
+          <th>إجراء</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p class="muted">يتم عرض آخر <strong>10</strong> عمليات فقط هنا (الإجمالي الكامل محفوظ داخليًا).</p>
+  </div>
+
+  <div class="social">
+    <p>للتواصل معنا:</p>
+    <div class="icons">
+      <a href="https://t.me/hlwany_Store" target="_blank" rel="noopener noreferrer"><img src="https://img.icons8.com/color/48/telegram-app--v1.png" alt="Telegram"></a>
+      <a href="https://wa.me/201050010931" target="_blank" rel="noopener noreferrer"><img src="https://img.icons8.com/color/48/whatsapp--v1.png" alt="WhatsApp"></a>
+      <a href="https://www.instagram.com/hlwany1s" target="_blank" rel="noopener noreferrer"><img src="https://img.icons8.com/color/48/instagram-new--v1.png" alt="Instagram"></a>
+      <a href="https://www.facebook.com/share/16br88wt3K/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer"><img src="https://img.icons8.com/color/48/facebook-new.png" alt="Facebook"></a>
+      <a href="https://www.tiktok.com/@hlwany1s" target="_blank" rel="noopener noreferrer"><img src="https://img.icons8.com/color/48/tiktok--v1.png" alt="TikTok"></a>
+    </div>
+  </div>
+
+  <footer>
+    <img src="hlwany_logo_final.png" alt="Logo">
+  </footer>
+
+  <script>
+    // === إعدادات — غيّر لو احتجت لاحقًا ===
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzW34HY3yZEy7athLmtepQBOCbP2Z08CkubprkWEzXc24MoJAcl_of8C2G8DUS1h1gykQ/exec';
+    const SHARED_TOKEN = 'a9f3b2e1-5c6d-4f7a-9b8c-1234567890ab';
+
+    // مفاتيح التخزين المحلي
+    const STORAGE_KEY = 'hlwany_session_log_v1';
+    const QUEUE_KEY = 'hlwany_send_queue_v1';
+
+    // كتالوج الأسعار
+    const prices = {
+      75:50,115:70,160:100,220:135,300:175,330:190,355:205,
+      520:300,715:410,890:500,1000:550,1500:825,1820:1000,
+      2000:1100,2500:1375,3000:1650,3500:1925,4000:2225,
+      4500:2475,5000:2740,5500:3015,6000:3290,6500:3560,
+      7000:3835,8000:4375,9000:4915,10000:5450,12000:6540,
+      13000:7085,14000:7630,17500:9540,20000:10900,25000:13600,
+      30000:16330,36850:20000,50000:27100,75000:40600,100000:54000
+    };
+
+    // تهيئة
+    const coinList = Object.keys(prices).map(c=>+c).sort((a,b)=>a-b);
+    const priceList = coinList.map(c=>({coins:c,price:prices[c]})).sort((a,b)=>a.price-b.price);
+    const fmt = n => new Intl.NumberFormat('ar-EG').format(Math.round(n));
+
+    // حسابات
+    function computeMoneyFromCoins(coins){
+      if(!coins||coins<0) return {amount:0,note:''};
+      if(prices[coins]) return {amount:prices[coins],note:'تطابق شريحة مباشرة'};
+      let lower=null,upper=null;for(let i=0;i<coinList.length;i++){if(coinList[i]<coins)lower=coinList[i];if(coinList[i]>coins){upper=coinList[i];break;}}
+      if(lower&&upper){const lp=prices[lower],up=prices[upper];const prop=(coins-lower)/(upper-lower);const est=Math.round(lp+prop*(up-lp));return {amount:est,note:`تقريب بين ${lower}→${fmt(lp)} و ${upper}→${fmt(up)}`};}
+      else if(!lower){const c1=coinList[0],c2=coinList[1],p1=prices[c1],p2=prices[c2];const slope=(p2-p1)/(c2-c1);const est=Math.max(1,Math.round(p1+(coins-c1)*slope));return {amount:est,note:`استقراء أقل من الحد الأدنى (بناءً على ${c1} و ${c2})`};}
+      else{const c1=coinList[coinList.length-2],c2=coinList[coinList.length-1],p1=prices[c1],p2=prices[c2];const slope=(p2-p1)/(c2-c1);const est=Math.round(p2+(coins-c2)*slope);return {amount:est,note:`استقراء أعلى من الحد الأقصى (بناءً على ${c1} و ${c2})`};}
+    }
+
+    function computeCoinsFromMoney(money){
+      if(!money||money<0) return {coins:0,note:''};
+      const exact = priceList.find(x=>x.price===money);
+      if(exact) return {coins:exact.coins,note:'تطابق شريحة مباشرة'};
+      let lower=null,upper=null;for(let i=0;i<priceList.length;i++){if(priceList[i].price<=money)lower=priceList[i];if(priceList[i].price>money){upper=priceList[i];break;}}
+      if(lower&&upper){const prop=(money-lower.price)/(upper.price-lower.price);const est=Math.round(lower.coins+prop*(upper.coins-lower.coins));return {coins:est,note:`تقريب بين ${fmt(lower.price)}→${lower.coins} و ${fmt(upper.price)}→${upper.coins}`};}
+      else if(!lower){const a=priceList[0],b=priceList[1];const slope=(b.coins-a.coins)/(b.price-a.price);const est=Math.max(0,Math.round(a.coins+(money-a.price)*slope));return {coins:est,note:`استقراء أقل من الحد الأدنى (بناءً على ${fmt(a.price)} و ${fmt(b.price)})`};}
+      else{const a=priceList[priceList.length-2],b=priceList[priceList.length-1];const slope=(b.coins-a.coins)/(b.price-a.price);const est=Math.round(b.coins+(money-b.price)*slope);return {coins:est,note:`استقراء أعلى من الحد الأقصى (بناءً على ${fmt(a.price)} و ${fmt(b.price)})`};}
+    }
+
+    // عرض
+    function fromCoins(){const coins=+document.getElementById('coins').value;const out=document.getElementById('result2');const det=document.getElementById('details2');const r=computeMoneyFromCoins(coins);out.textContent=r.amount? `السعر: ${fmt(r.amount)} جنيه` : '';det.textContent=r.note;lastCalc='coins';}
+    function fromMoney(){const money=+document.getElementById('money').value;const out=document.getElementById('result1');const det=document.getElementById('details1');const r=computeCoinsFromMoney(money);out.textContent=r.coins? `يمكنك شراء: ${fmt(r.coins)} عملة` : '';det.textContent=r.note;lastCalc='money';}
+
+    // الوقت الحي
+    const nowEl=document.getElementById('now');
+    setInterval(()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');nowEl.textContent=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;},1000);
+
+    // إدارة السجل المحلي
+    function loadLog(){try{const raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):[]}catch(e){return[]}}
+    function saveLog(list){localStorage.setItem(STORAGE_KEY,JSON.stringify(list))}
+
+    function addEntry(row){const list=loadLog();list.push(row);saveLog(list);renderTable();renderKpis();}
+
+    function renderKpis(){const list=loadLog();document.getElementById('kpiOps').textContent=fmt(list.length);} 
+
+    function renderTable(){const list=loadLog();const tbody=document.querySelector('#logTable tbody');tbody.innerHTML='';const lastTen=list.slice(-10);const baseIndex=list.length-lastTen.length;lastTen.forEach((r,i)=>{const trueIndex=baseIndex+i;const tr=document.createElement('tr');if(r.deleted) tr.classList.add('deleted');tr.innerHTML=`<td>${trueIndex+1}</td>
+          <td>${r.timestamp}</td>
+          <td>${r.admin}</td>
+          <td>${fmt(r.amountEGP)}</td>
+          <td>${fmt(r.coins)}</td>
+          <td>${r.mode==='money_to_coins'?'فلوس→عملات':'عملات→فلوس'}</td>
+          <td>${r.note||''}</td>
+          <td class="actions">${r.deleted? '<span class="muted">تم الحذف</span>' : `<button class="btn-danger btn-del" data-index="${trueIndex}">حذف</button>`}</td>`;tbody.appendChild(tr);});}
+
+    // حذف محلي (يضع وسم deleted أو يحذف)
+    document.getElementById('logTable').addEventListener('click',(e)=>{const btn=e.target.closest('.btn-del');if(!btn) return;const idx=+btn.getAttribute('data-index');const list=loadLog();if(idx>=0 && idx<list.length){if(confirm('متأكد من حذف العملية؟')){list[idx].deleted=true;saveLog(list);renderTable();renderKpis();}}});
+
+    // إرسال للـ Apps Script
+    async function sendPayload(payload){try{const res=await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,token:SHARED_TOKEN}),cache:'no-store'});const text=await res.text();try{return JSON.parse(text)}catch(e){return {status:'error',message:text||'no-response'}}}catch(err){return {status:'error',message:String(err)}}}
+
+    function pushToQueue(payload){const q=JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');q.push(payload);localStorage.setItem(QUEUE_KEY,JSON.stringify(q));}
+
+    async function processQueue(){const q=JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');if(!q.length) return;const remaining=[];for(const item of q){const r=await sendPayload(item);if(r && r.status==='ok'){console.log('Queue item sent OK',item);}else{console.warn('Queue item failed, will retry',r,item);remaining.push(item);}}localStorage.setItem(QUEUE_KEY,JSON.stringify(remaining));}
+
+    setInterval(processQueue,20000);window.addEventListener('load',processQueue);
+
+    // ربط زر إضافة العملية
+    let lastCalc=null;
+    document.getElementById('btnMoney').addEventListener('click',fromMoney);
+    document.getElementById('btnCoins').addEventListener('click',fromCoins);
+
+    document.getElementById('btnAdd').addEventListener('click',async ()=>{
+      const sendStatus=document.getElementById('sendStatus');
+      const admin=document.getElementById('adminSelect').value;
+      const note=document.getElementById('note').value.trim();
+
+      let mode='', amount=0, coins=0;
+      if(lastCalc==='money'){const moneyVal=+document.getElementById('money').value||0;const rc=computeCoinsFromMoney(moneyVal);amount=moneyVal;coins=rc.coins;mode='money_to_coins';}
+      else if(lastCalc==='coins'){const coinVal=+document.getElementById('coins').value||0;const ra=computeMoneyFromCoins(coinVal);amount=ra.amount;coins=coinVal;mode='coins_to_money';}
+      else{const moneyVal=+document.getElementById('money').value||0;const coinVal=+document.getElementById('coins').value||0;if(coinVal && !moneyVal){const ra=computeMoneyFromCoins(coinVal);amount=ra.amount;coins=coinVal;mode='coins_to_money';}else{const rc=computeCoinsFromMoney(moneyVal);amount=moneyVal;coins=rc.coins;mode='money_to_coins';}}
+
+      if(!amount || !coins){sendStatus.textContent='من فضلك احسب الأول (فلوس→عملات أو عملات→فلوس) ثم أضف العملية.';return;}
+
+      const d=new Date(),pad=n=>String(n).padStart(2,'0');const stamp=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+      // أضف للسجل المحلي فورًا
+      addEntry({timestamp:stamp,admin,amountEGP:Math.round(amount),coins:Math.round(coins),mode,note});
+
+      // حاول ترسلها للشيت
+      const payload={admin,mode,amountEGP:Math.round(amount),coins:Math.round(coins),note,timestamp:stamp};
+      const res=await sendPayload(payload);
+      if(res && res.status==='ok'){sendStatus.textContent='تم إرسال العملية للشيت ✅';}
+      else{pushToQueue(payload);sendStatus.textContent='فشل الإرسال — خزّن محليًا وسيعاد الإرسال تلقائيًا';}
+    });
+
+    // أزرار مساعدة
+    const moneyEl=document.getElementById('money');
+    const coinsEl=document.getElementById('coins');
+    document.getElementById('btnClear1').addEventListener('click',()=>{moneyEl.value='';document.getElementById('result1').textContent='';document.getElementById('details1').textContent='';moneyEl.focus();});
+    document.getElementById('btnClear2').addEventListener('click',()=>{coinsEl.value='';document.getElementById('result2').textContent='';document.getElementById('details2').textContent='';coinsEl.focus();});
+    document.getElementById('btnClearAll').addEventListener('click',()=>{localStorage.removeItem(STORAGE_KEY);moneyEl.value='';coinsEl.value='';document.getElementById('result1').textContent='';document.getElementById('details1').textContent='';document.getElementById('result2').textContent='';document.getElementById('details2').textContent='';renderTable();renderKpis();});
+    moneyEl.addEventListener('keydown',e=>{if(e.key==='Enter') fromMoney();});
+    coinsEl.addEventListener('keydown',e=>{if(e.key==='Enter') fromCoins();});
+
+    // بدء العرض
+    renderTable();renderKpis();
+  </script>
+</body>
+</html>
